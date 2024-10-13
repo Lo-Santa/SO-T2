@@ -15,5 +15,8 @@
 #define TP_BITMAP_SIZE 128           // Tamaño del Bitmap de Tablas de Páginas en bytes (128 bytes)
 
 
+void os_mount(char* memory_path);
+void os_close();
 void os_ls_files(int process_id);
 void os_frame_bitmap();
+void os_tp_bitmap();

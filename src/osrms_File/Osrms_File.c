@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include "Osrms_File.h"
 
+// Variable global para el archivo de memoria
+FILE *memory_file = NULL;
+
 // Estructura para la tabla de archivos dentro del PCB
 typedef struct {
     unsigned char valid;      // 0x01 si es válido, 0x00 si no
@@ -11,13 +14,29 @@ typedef struct {
     unsigned int file_size;   // Tamaño del archivo
 } FileEntry;
 
+
+// Función os_mount para montar el archivo de memoria
+void os_mount(char* memory_path) {
+    // Intentar abrir el archivo en modo binario de lectura/escritura
+    memory_file = fopen(memory_path, "rb+");
+    if (memory_file == NULL) {
+        perror("Error al abrir el archivo de memoria");
+    } else {
+        printf("Memoria montada correctamente: %s\n", memory_path);
+    }
+}
+
+// Función os_close para cerrar el archivo al terminar el programa.
+void os_close()
+{
+    if (memory_file != NULL) {
+        fclose(memory_file);
+        printf("Archivo de memoria cerrado correctamente.\n");
+    }
+}
+
 // Función para listar archivos de un proceso
 void os_ls_files(int process_id) {
-    FILE *memory_file = fopen("mem_filled.bin", "rb");  // Abrir el archivo de memoria (esto es solo un ejemplo)
-    if (!memory_file) {
-        perror("Error al abrir el archivo de memoria");
-        return;
-    }
 
     int found_process = 0;  // Bandera para ver si encontramos el proceso
 
@@ -68,18 +87,10 @@ void os_ls_files(int process_id) {
     if (!found_process) {
         printf("Proceso con ID %d no encontrado.\n", process_id);
     }
-
-    fclose(memory_file);  // Cerrar el archivo de memoria
 }
 
 // Función para imprimir el estado del Frame Bitmap y contar los frames ocupados y libres
 void os_frame_bitmap() {
-    FILE *memory_file = fopen("mem_filled.bin", "rb");  // Abrir el archivo de memoria (esto es solo un ejemplo)
-    if (!memory_file) {
-        perror("Error al abrir el archivo de memoria");
-        return;
-    }
-
     // Desplazarse hasta el inicio del Frame Bitmap
     fseek(memory_file, FRAME_BITMAP_OFFSET, SEEK_SET);
 
@@ -117,19 +128,11 @@ void os_frame_bitmap() {
     }
     printf("\n\nFrames ocupados: %d\n", frames_ocupados);
     printf("Frames libres: %d\n\n", frames_libres);
-
-    fclose(memory_file);  // Cerrar el archivo de memoria
 }
 
 
 // Función para imprimir el estado del Bitmap de Tablas de Páginas y contar las tablas ocupadas y libres
 void os_tp_bitmap() {
-    FILE *memory_file = fopen("mem_filled.bin", "rb");  // Abrir el archivo de memoria (esto es solo un ejemplo)
-    if (!memory_file) {
-        perror("Error al abrir el archivo de memoria");
-        return;
-    }
-
     // Desplazarse hasta el inicio del Bitmap de Tablas de Páginas
     fseek(memory_file, TP_BITMAP_OFFSET, SEEK_SET);
 
@@ -167,58 +170,4 @@ void os_tp_bitmap() {
     }
     printf("\n\nTablas ocupadas: %d\n", tablas_ocupadas);
     printf("Tablas libres: %d\n\n", tablas_libres);
-
-    fclose(memory_file);  // Cerrar el archivo de memoria
-}
-
-
-int main() {
-    char input[50];  // Buffer para almacenar la entrada del usuario
-
-    while (1) {
-        // Pedir al usuario que ingrese el nombre de la función o 'exit' para salir
-        printf("Ingrese el nombre de la función (os_ls_files, os_frame_bitmap, o 'exit' para salir): ");
-        fgets(input, 50, stdin);  // Leer la entrada del usuario
-
-        // Eliminar el salto de línea al final de la entrada
-        input[strcspn(input, "\n")] = 0;
-
-        // Si el usuario escribe 'exit', terminamos el ciclo
-        if (strcmp(input, "exit") == 0) {
-            printf("Saliendo del programa.\n");
-            break;
-        }
-
-        // Comprobar si el usuario quiere ejecutar 'os_ls_files'
-        if (strcmp(input, "os_ls_files") == 0) {
-            char process_input[10];
-            int process_id;
-
-            // Pedir el process_id
-            printf("Ingrese el ID del proceso: ");
-            fgets(process_input, 10, stdin);  // Leer el ID del proceso
-            process_id = atoi(process_input);  // Convertir el input a entero
-
-            // Llamar a la función os_ls_files con el ID del proceso
-            os_ls_files(process_id);
-        }
-
-        // Comprobar si el usuario quiere ejecutar 'os_frame_bitmap'
-        else if (strcmp(input, "os_frame_bitmap") == 0) {
-            // Llamar a la función os_frame_bitmap
-            os_frame_bitmap();
-        }
-        
-        else if (strcmp(input, "os_tp_bitmap") == 0) {
-            // Llamar a la función os_tp_bitmap
-            os_tp_bitmap();
-        }
-
-        // Si la entrada no coincide con ninguna función válida
-        else {
-            printf("Función no reconocida. Por favor, intente nuevamente.\n");
-        }
-    }
-
-    return 0;
 }
