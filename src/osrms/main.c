@@ -1,6 +1,5 @@
 #include "../osrms_API/osrms_API.h"
 #include <stdio.h>
-#include <signal.h>
 
 int main(int argc, char const *argv[])
 {
